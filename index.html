@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aarogya Saathi — AI Health Companion</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+  :root{
+    --bg:#0d0b0c; --bg2:#141013; --charcoal:#1a1518;
+    --ivory:#f1e9da; --muted:#c2b3a4; --faint:#95867a;
+    --gold:#d9b96a; --gold2:#e8d193; --gold-deep:#a8842f;
+    --wine:#7e1f2e; --wine2:#a13347; --crimson:#c95a6b;
+    --glass:rgba(255,255,255,.035); --glass2:rgba(255,255,255,.055);
+    --hairline:rgba(217,185,106,.18); --hairline-soft:rgba(255,255,255,.08);
+    --sage:#9cc98b; --steel:#8fb3e8; --rose:#e0808f;
+    --display:'Cormorant Garamond',Georgia,serif; --body:'Manrope','Segoe UI',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box; margin:0; padding:0; font-family:var(--body);}
+  html{scroll-behavior:smooth;}
+  body{color:var(--ivory); min-height:100vh; overflow-x:hidden; background:var(--bg);
+    background-image:
+      radial-gradient(1000px 700px at 88% -8%, rgba(126,31,46,.32) 0%, transparent 55%),
+      radial-gradient(900px 650px at -8% 18%, rgba(168,132,47,.14) 0%, transparent 55%),
+      radial-gradient(1100px 800px at 50% 115%, rgba(126,31,46,.18) 0%, transparent 60%);
+  }
+  ::selection{background:rgba(217,185,106,.3);}
+  ::-webkit-scrollbar{width:10px;} ::-webkit-scrollbar-thumb{background:#2c2226; border-radius:8px;} ::-webkit-scrollbar-track{background:transparent;}
+
+  /* ---------- header ---------- */
+  header{display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;
+    padding:14px 26px; position:sticky; top:12px; z-index:50; margin:12px 14px 0; border-radius:18px;
+    background:rgba(19,14,17,.82); backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px);
+    border:1px solid var(--hairline); box-shadow:0 18px 50px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.05);}
+  .brand{display:flex; align-items:center; gap:13px;}
+  .brand .logo{width:44px; height:44px; border-radius:13px; display:flex; align-items:center; justify-content:center; font-size:21px;
+    background:linear-gradient(145deg,rgba(217,185,106,.22),rgba(126,31,46,.35));
+    border:1px solid var(--hairline);
+    box-shadow:0 8px 24px rgba(217,185,106,.12), inset 0 1px 0 rgba(232,209,147,.25);}
+  .brand h1{font-family:var(--display); font-size:1.45rem; font-weight:600; line-height:1.02; letter-spacing:.5px; color:var(--gold2);}
+  .brand small{color:var(--muted); font-weight:600; font-size:.7rem; letter-spacing:.6px;}
+  .hcontrols{display:flex; gap:8px; align-items:center; flex-wrap:wrap;}
+  select, .btn{border:1px solid var(--hairline-soft); border-radius:13px; padding:10px 16px; font-size:.88rem; cursor:pointer;
+    background:var(--glass2); color:var(--ivory); font-family:var(--body); font-weight:600;
+    backdrop-filter:blur(8px); transition:transform .12s, box-shadow .25s, border-color .25s, background .25s;}
+  select option{background:#1a1518; color:var(--ivory);}
+  .btn{position:relative;}
+  .btn:hover{transform:translateY(-2px); border-color:var(--hairline); box-shadow:0 14px 34px rgba(0,0,0,.45);}
+  .btn:active{transform:translateY(1px) scale(.98);}
+  .btn-gold{background:linear-gradient(145deg,#ecd6a0,#c09a48 60%,#96722a); border:1px solid rgba(232,209,147,.5); color:#241a06;
+    box-shadow:0 10px 30px rgba(217,185,106,.25), inset 0 1px 0 rgba(255,255,255,.55); text-shadow:0 1px 0 rgba(255,255,255,.25);}
+  .btn-gold:hover{box-shadow:0 16px 40px rgba(217,185,106,.4), inset 0 1px 0 rgba(255,255,255,.55);}
+  .btn-ghost{background:transparent; color:var(--gold2);}
+  .btn-ghost:hover{background:rgba(217,185,106,.08);}
+  .btn-wine{background:linear-gradient(145deg,rgba(161,51,71,.6),rgba(126,31,46,.6)); border:1px solid rgba(224,128,143,.5); color:#f7dade;}
+  .btn[disabled]{opacity:.45; cursor:not-allowed; transform:none;}
+
+  /* ---------- hero ---------- */
+  .hero{max-width:1120px; margin:0 auto; padding:52px 24px 26px; display:grid; grid-template-columns:1.05fr .95fr; gap:36px; align-items:center;}
+  .hero-copy .label{display:inline-flex; align-items:center; gap:8px; font-size:.66rem; letter-spacing:3.5px; font-weight:800; color:var(--gold);
+    padding:7px 15px; border:1px solid var(--hairline); border-radius:99px; margin-bottom:22px; background:rgba(217,185,106,.05);}
+  .label .dot{width:6px; height:6px; border-radius:50%; background:var(--gold); box-shadow:0 0 10px var(--gold); animation:dotPulse 2.4s infinite;}
+  @keyframes dotPulse{0%,100%{opacity:1;} 50%{opacity:.35;}}
+  .hero-copy h1{font-family:var(--display); font-weight:600; font-size:clamp(2.5rem, 5.4vw, 4rem); line-height:1.04; letter-spacing:.5px;}
+  .hero-copy h1 em{font-style:italic; background:linear-gradient(100deg,#ecd6a0 10%,#d9b96a 45%,#a13347 90%); -webkit-background-clip:text; background-clip:text; color:transparent;}
+  .hero-copy p{margin:18px 0 6px; color:var(--muted); font-size:1rem; line-height:1.75; max-width:480px;}
+  .cta-row{display:flex; gap:14px; flex-wrap:wrap; margin-top:26px;}
+  .cta-row .btn{padding:14px 26px; font-size:.95rem; border-radius:15px;}
+  .pillrow{display:flex; gap:8px; flex-wrap:wrap; margin-top:26px;}
+  .pill{font-size:.75rem; font-weight:700; letter-spacing:.4px; padding:6px 13px; border-radius:99px; color:var(--muted);
+    background:var(--glass); border:1px solid var(--hairline-soft);}
+  /* avatar stage */
+  .hero-stage{position:relative; height:460px; display:flex; align-items:center; justify-content:center;}
+  .stage-ring{position:absolute; border-radius:50%; border:1px solid var(--hairline);}
+  .r1{width:330px; height:330px; animation:slowSpin 40s linear infinite; border-style:dashed; border-color:rgba(217,185,106,.32);}
+  .r2{width:410px; height:410px; border-color:rgba(217,185,106,.14);}
+  .r3{width:250px; height:250px; border-color:rgba(224,128,143,.3); animation:slowSpin 60s linear infinite reverse; border-style:dashed;}
+  @keyframes slowSpin{to{transform:rotate(360deg);}}
+  .stage-glow{position:absolute; width:340px; height:340px; border-radius:50%;
+    background:radial-gradient(circle, rgba(217,185,106,.13) 0%, rgba(126,31,46,.1) 45%, transparent 70%); filter:blur(6px);}
+  .hero-avatar{position:relative; z-index:2; width:230px; height:250px; animation:floaty 5s ease-in-out infinite;
+    filter:drop-shadow(0 26px 42px rgba(0,0,0,.65));}
+  @keyframes floaty{0%,100%{transform:translateY(0);} 50%{transform:translateY(-14px);}}
+  .hero-avatar svg{width:100%; height:100%;}
+  .chip{position:absolute; z-index:3; display:flex; align-items:center; gap:8px; font-size:.76rem; font-weight:700; color:var(--ivory);
+    background:rgba(24,18,21,.88); backdrop-filter:blur(10px); border:1px solid var(--hairline); border-radius:13px; padding:9px 14px;
+    box-shadow:0 16px 36px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.06); white-space:nowrap;}
+  .chip .ico{font-size:1rem;}
+  .chip b{color:var(--gold2); font-weight:800;}
+  .chip small{color:var(--faint); font-weight:600;}
+  .c1{top:9%; left:0; animation:floaty 6s ease-in-out infinite;}
+  .c2{top:34%; right:-4%; animation:floaty 7s 1s ease-in-out infinite;}
+  .c3{bottom:17%; left:4%; animation:floaty 6.5s .5s ease-in-out infinite;}
+  .c4{bottom:-2%; right:12%; animation:floaty 7.5s 1.6s ease-in-out infinite;}
+  .particle{position:absolute; width:5px; height:5px; border-radius:50%; background:var(--gold2); opacity:.5; filter:blur(.5px);
+    box-shadow:0 0 10px var(--gold); animation:sparkle 4s ease-in-out infinite;}
+  @keyframes sparkle{0%,100%{opacity:.15; transform:scale(.7);} 50%{opacity:.8; transform:scale(1.15);}}
+
+  /* ---------- cards ---------- */
+  main{max-width:940px; margin:0 auto; padding:26px 18px 210px;}
+  .card{background:var(--glass); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+    border:1px solid var(--hairline-soft); border-radius:22px; padding:24px; margin:22px 0; position:relative; overflow:hidden;
+    box-shadow:0 24px 60px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.05);}
+  .card::before{content:""; position:absolute; inset:0 0 auto 0; height:1px;
+    background:linear-gradient(90deg,transparent,rgba(232,209,147,.35),transparent);}
+  .card h2{font-size:1.02rem; margin-bottom:12px; display:flex; align-items:center; gap:10px; font-weight:700; letter-spacing:.2px;}
+  textarea{width:100%; min-height:150px; border:1.5px solid var(--hairline-soft); border-radius:15px; padding:13px 15px; font-size:.94rem;
+    resize:vertical; background:rgba(0,0,0,.28); color:var(--ivory); font-family:var(--body); transition:.25s; line-height:1.55;}
+  textarea::placeholder{color:#a08f7e;}
+  textarea:focus{outline:none; border-color:var(--gold-deep); box-shadow:0 0 0 4px rgba(217,185,106,.12);}
+  .inputrow{display:flex; gap:10px; flex-wrap:wrap; margin-top:13px; align-items:center;}
+  .hint{font-size:.78rem; color:var(--faint); margin-top:9px; min-height:1em; font-weight:600;}
+  .filelabel{display:inline-flex; align-items:center; gap:7px; border:1.5px dashed var(--hairline); color:var(--gold2);
+    background:rgba(217,185,106,.04); border-radius:13px; padding:10px 16px; cursor:pointer; font-size:.86rem; font-weight:700; transition:.15s;}
+  .filelabel:hover{background:rgba(217,185,106,.1); transform:translateY(-1px);}
+  .filelabel input{display:none;}
+
+  /* ---------- checklist sections ---------- */
+  .sections{display:grid; grid-template-columns:1fr 1fr; gap:18px; perspective:1100px;}
+  @media(max-width:720px){.sections{grid-template-columns:1fr;}}
+  .sec{border-radius:20px; padding:20px; position:relative; transform-style:preserve-3d; will-change:transform;
+    opacity:0; animation:rise3d .65s cubic-bezier(.2,.7,.3,1) forwards; transition:box-shadow .25s; overflow:hidden;
+    background:linear-gradient(165deg, rgba(255,255,255,.045), rgba(255,255,255,.015)); border:1px solid var(--hairline-soft);}
+  .sec:nth-child(2){animation-delay:.1s}.sec:nth-child(3){animation-delay:.2s}.sec:nth-child(4){animation-delay:.3s}
+  @keyframes rise3d{from{opacity:0; transform:rotateX(14deg) translateY(36px) scale(.96);} to{opacity:1; transform:none;}}
+  .sec h3{font-size:.94rem; margin-bottom:13px; display:flex; align-items:center; gap:11px; font-weight:800; letter-spacing:.3px;}
+  .sec h3 .badge{width:37px; height:37px; border-radius:12px; display:inline-flex; align-items:center; justify-content:center; font-size:17px; flex-shrink:0;
+    border:1px solid var(--hairline); background:rgba(0,0,0,.3);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.12), 0 8px 18px rgba(0,0,0,.35);}
+  .sec ul{list-style:none;}
+  .sec li{display:flex; gap:8px; align-items:flex-start; padding:9px 11px; border-radius:11px; font-size:.89rem; line-height:1.55;
+    background:rgba(0,0,0,.2); margin-bottom:7px; border:1px solid rgba(255,255,255,.05); color:#e6dccb; transition:.15s;}
+  .sec li:hover{background:rgba(217,185,106,.06); border-color:var(--hairline); transform:translateX(4px);}
+  .sec li .spk{margin-left:auto; flex-shrink:0;}
+  .sec.diet{border-left:3px solid rgba(156,201,139,.6);} .sec.diet h3{color:var(--sage);}
+  .sec.meds{border-left:3px solid rgba(143,179,232,.6);} .sec.meds h3{color:var(--steel);}
+  .sec.warn{border-left:3px solid rgba(224,128,143,.65);} .sec.warn h3{color:var(--rose);}
+  .sec.follow{border-left:3px solid rgba(217,185,106,.65);} .sec.follow h3{color:var(--gold2);}
+  .spk{border:none; background:rgba(217,185,106,.1); border:1px solid transparent; border-radius:9px; cursor:pointer; font-size:.88rem; padding:5px 8px; line-height:1; transition:.15s;}
+  .spk:hover{background:rgba(217,185,106,.22); border-color:var(--hairline); transform:scale(1.08);}
+  .toolbar{display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px;}
+
+  /* ---------- quiz ---------- */
+  .qcard{display:none;}
+  .quizhead{display:flex; align-items:center; justify-content:space-between; gap:14px; margin-bottom:14px; flex-wrap:wrap;}
+  .ringwrap{position:relative; width:56px; height:56px; flex-shrink:0;}
+  .ringwrap svg{transform:rotate(-90deg);}
+  .ringwrap .track{fill:none; stroke:rgba(255,255,255,.12); stroke-width:5;}
+  .ringwrap .prog{fill:none; stroke:var(--gold); stroke-width:5; stroke-linecap:round; stroke-dasharray:138.2; stroke-dashoffset:138.2; transition:stroke-dashoffset .6s ease;}
+  .ringwrap .rlabel{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:.74rem; font-weight:800; color:var(--gold2);}
+  .qbox{background:linear-gradient(165deg, rgba(255,255,255,.05), rgba(255,255,255,.02)); border:1px solid var(--hairline-soft);
+    border-radius:18px; padding:20px; margin-bottom:10px; transform-style:preserve-3d;}
+  .qbox .qn{font-size:.7rem; color:var(--faint); letter-spacing:2px; margin-bottom:7px; font-weight:800;}
+  .qbox .qt{font-family:var(--display); font-size:1.35rem; font-weight:600; margin-bottom:16px; color:var(--ivory);}
+  .qresult{font-weight:800; margin-top:12px; min-height:1.5em; font-size:.92rem;}
+  .qresult.ok{color:var(--sage);} .qresult.no{color:var(--rose);}
+
+  /* ---------- AI panel ---------- */
+  .aiPanel{display:none;}
+  .aiPanel .row{display:flex; gap:8px; flex-wrap:wrap; margin-top:11px;}
+  .aiPanel input{flex:1; min-width:240px; border:1.5px solid var(--hairline-soft); border-radius:12px; padding:10px 13px; font-size:.9rem;
+    background:rgba(0,0,0,.3); color:var(--ivory);}
+  .aiPanel input::placeholder{color:var(--faint);}
+  .statuschip{display:inline-block; padding:4px 12px; border-radius:99px; font-size:.7rem; font-weight:800; letter-spacing:.6px;}
+  .chip-demo{background:rgba(217,185,106,.12); color:var(--gold2); border:1px solid var(--hairline);}
+  .chip-live{background:rgba(156,201,139,.12); color:var(--sage); border:1px solid rgba(156,201,139,.3);}
+  details.howto{margin-top:8px; font-size:.83rem; color:var(--muted);}
+  details.howto summary{cursor:pointer; font-weight:700; color:var(--gold2);}
+  details.howto pre{background:rgba(0,0,0,.3); border:1px solid var(--hairline-soft); border-radius:12px; padding:12px; margin-top:8px; white-space:pre-wrap; font-size:.7rem; color:#c9b8a5;}
+
+  /* ---------- NISHA corner avatar ---------- */
+  .avatar-wrap{position:fixed; right:24px; bottom:24px; z-index:100; display:flex; flex-direction:column; align-items:center; gap:7px; perspective:600px;}
+  .bubble{display:none; max-width:250px; background:rgba(24,18,21,.94); backdrop-filter:blur(10px);
+    border:1px solid var(--hairline); border-radius:16px 16px 5px 16px; padding:11px 14px; font-size:.84rem; font-weight:600;
+    box-shadow:0 20px 44px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.06); margin-bottom:4px; color:var(--ivory);}
+  .bubble.show{display:block; animation:bubbleIn .28s cubic-bezier(.2,.8,.3,1.2);}
+  @keyframes bubbleIn{from{opacity:0; transform:translateY(8px) scale(.9);} to{opacity:1; transform:none;}}
+  .avatar-btn{position:relative; width:128px; height:138px; border:none; cursor:pointer; background:transparent; padding:0;
+    animation:floaty 4.2s ease-in-out infinite; transition:transform .25s; filter:drop-shadow(0 18px 34px rgba(0,0,0,.6));}
+  .avatar-btn:hover{transform:scale(1.06);}
+  .avatar-btn .halo{position:absolute; inset:-12px; border-radius:50%; pointer-events:none; border:2px solid rgba(217,185,106,.22);
+    box-shadow:0 0 30px rgba(217,185,106,.18);}
+  .avatar-btn.listening .halo{border-color:rgba(232,209,147,.8); box-shadow:0 0 36px rgba(217,185,106,.45); animation:haloPulse 1.3s infinite;}
+  @keyframes haloPulse{0%{transform:scale(1); opacity:1;} 50%{transform:scale(1.12); opacity:.7;} 100%{transform:scale(1); opacity:1;}}
+  .avatar-btn.thinking .halo{border-color:transparent; border-top-color:var(--gold); border-right-color:rgba(217,185,106,.35); animation:spin .9s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .avatar-svg{width:128px; height:138px;}
+  .eyes{transform-origin:center 112px; animation:blink 4.4s infinite;}
+  @keyframes blink{0%,93%,100%{transform:scaleY(1);} 96%{transform:scaleY(.08);}}
+  .mouth-open{display:none;}
+  .avatar-btn.speaking .mouth-open{display:block; animation:chat .26s infinite alternate; transform-origin:center 141px;}
+  .avatar-btn.speaking .mouth-smile{display:none;}
+  @keyframes chat{from{transform:scaleY(.5);} to{transform:scaleY(1.2);}}
+  .eq{position:absolute; bottom:2px; left:50%; transform:translateX(-50%); display:flex; gap:3px; align-items:flex-end; height:16px; opacity:0; transition:.2s;}
+  .avatar-btn.speaking .eq{opacity:1;}
+  .eq span{width:3px; border-radius:2px; background:var(--gold2); box-shadow:0 0 8px rgba(217,185,106,.6); animation:eqB .5s ease-in-out infinite alternate;}
+  .eq span:nth-child(1){height:6px;} .eq span:nth-child(2){height:12px; animation-delay:.12s;} .eq span:nth-child(3){height:8px; animation-delay:.24s;}
+  .eq span:nth-child(4){height:14px; animation-delay:.06s;} .eq span:nth-child(5){height:7px; animation-delay:.18s;}
+  @keyframes eqB{from{transform:scaleY(.4);} to{transform:scaleY(1.25);}}
+  .avatar-shadow{width:80px; height:12px; border-radius:50%; background:rgba(0,0,0,.5); filter:blur(7px); animation:shadowPulse 4.2s ease-in-out infinite;}
+  @keyframes shadowPulse{0%,100%{transform:scaleX(1); opacity:.85;} 50%{transform:scaleX(.8); opacity:.55;}}
+  .avatar-cap{font-size:.75rem; font-weight:800; letter-spacing:.5px; color:var(--gold2); background:rgba(24,18,21,.9); backdrop-filter:blur(8px);
+    padding:4px 15px; border-radius:99px; border:1px solid var(--hairline); box-shadow:0 8px 22px rgba(0,0,0,.45);}
+  .listen-note{position:fixed; left:50%; transform:translateX(-50%); bottom:28px; z-index:99;
+    background:rgba(24,18,21,.92); backdrop-filter:blur(10px); border:1px solid var(--hairline);
+    color:var(--gold2); padding:10px 20px; border-radius:99px; font-size:.84rem; font-weight:700; display:none;
+    box-shadow:0 14px 36px rgba(0,0,0,.5);}
+  .listen-note.show{display:block;}
+
+  footer{text-align:center; padding:26px 16px 60px; color:#a2927f; font-size:.82rem; line-height:1.8;}
+  footer .disc{color:#a2927f; font-style:italic;}
+
+  /* scroll reveal */
+  .reveal{opacity:0; transform:translateY(26px); transition:opacity .7s ease, transform .7s cubic-bezier(.2,.7,.3,1);}
+  .reveal.in{opacity:1; transform:none;}
+
+  @media(max-width:860px){
+    .hero{grid-template-columns:1fr; padding-top:34px; text-align:center;}
+    .hero-copy p{margin-left:auto; margin-right:auto;}
+    .cta-row, .pillrow{justify-content:center;}
+    .hero-stage{height:380px; order:-1; transform:scale(.85);}
+    .chip{font-size:.68rem; padding:7px 10px;}
+  }
+  @media(max-width:520px){
+    .hero-stage{transform:scale(.7); height:300px;}
+    .c2{right:-14%;} .c1{left:-6%;}
+    .avatar-btn{width:104px; height:112px;} .avatar-svg{width:104px; height:112px;}
+  }
+  @media print{
+    header,.avatar-wrap,.avatar-shadow,.listen-note,#inputCard,.toolbar,details.howto,footer,.hero,.eq{display:none !important;}
+    body{background:#fff !important; color:#111 !important;}
+    main{padding:0;}
+    .card,.sec,.qbox{background:#fff !important; border:1px solid #ccc !important; box-shadow:none !important; color:#111 !important; animation:none; opacity:1;}
+    .sec h3, .sec li{color:#111 !important;}
+    .sec{break-inside:avoid;}
+  }
+  @media (prefers-reduced-motion: reduce){ *{animation:none !important; transition:none !important;} .sec{opacity:1;} .reveal{opacity:1; transform:none;} }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="logo">🩺</div>
+    <div>
+      <h1>Aarogya Saathi</h1>
+      <small data-i18n="tagline">Discharge summary → simple daily checklist, in your language</small>
+    </div>
+  </div>
+  <div class="hcontrols">
+    <select id="langSel" title="Language">
+      <option value="en">🇬🇧 English</option>
+      <option value="hi">🇮🇳 हिंदी</option>
+      <option value="ta">🇮🇳 தமிழ்</option>
+    </select>
+    <button class="btn btn-ghost" id="aiBtn" title="Connect live AI">⚙️ AI</button>
+    <button class="btn btn-ghost" id="printBtn" title="Print checklist">🖨️</button>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero" id="heroTop">
+  <div class="hero-copy">
+    <div class="label"><span class="dot"></span>AI HEALTH COMPANION</div>
+    <h1>Hospital jargon in.<br><em>Simple care,</em> out.</h1>
+    <p>Aarogya Saathi turns a dense discharge summary into a calm, colour-coded daily plan — medicines, diet, warning signs and follow-up — in your own language, read aloud by Nisha, and verified with a teach-back quiz before you leave.</p>
+    <div class="cta-row">
+      <button class="btn btn-gold" id="ctaStart">✨ Start Health Assessment</button>
+      <button class="btn btn-wine" id="ctaTalk">🎙️ Talk to AI</button>
+    </div>
+    <div class="pillrow">
+      <span class="pill">🗣️ Voice-first</span>
+      <span class="pill">🌐 3 languages</span>
+      <span class="pill">🎓 Teach-back quiz</span>
+      <span class="pill">🖨️ Printable</span>
+    </div>
+  </div>
+  <div class="hero-stage" id="heroStage">
+    <div class="stage-glow"></div>
+    <div class="stage-ring r1"></div>
+    <div class="stage-ring r2"></div>
+    <div class="stage-ring r3"></div>
+    <div class="hero-avatar" data-depth="6">
+      <svg viewBox="0 0 200 260" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="hHair" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#57392e"/><stop offset="1" stop-color="#2c1b14"/></linearGradient>
+          <radialGradient id="hFace" cx="0.42" cy="0.36" r="0.85"><stop offset="0" stop-color="#ffe9cd"/><stop offset="1" stop-color="#f0ba8c"/></radialGradient>
+          <linearGradient id="hCap" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#dfeef0"/></linearGradient>
+          <linearGradient id="hScrub" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a13347"/><stop offset="1" stop-color="#4d121f"/></linearGradient>
+          <radialGradient id="hCheek" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ff9d84" stop-opacity=".75"/><stop offset="1" stop-color="#ff9d84" stop-opacity="0"/></radialGradient>
+          <linearGradient id="hGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe08a"/><stop offset="1" stop-color="#d9a520"/></linearGradient>
+        </defs>
+        <path d="M28 260 C32 208 66 186 100 186 C134 186 168 208 172 260 Z" fill="url(#hScrub)"/>
+        <path d="M86 186 L100 204 L114 186 L106 184 L100 196 L94 184 Z" fill="#f7e3d5" opacity=".9"/>
+        <rect x="88" y="156" width="24" height="34" rx="10" fill="#e8ab7e"/>
+        <ellipse cx="100" cy="160" rx="14" ry="5" fill="#00000012"/>
+        <ellipse cx="100" cy="112" rx="57" ry="60" fill="url(#hHair)"/>
+        <circle cx="50" cy="116" r="8.5" fill="#f0ba8c"/><circle cx="150" cy="116" r="8.5" fill="#f0ba8c"/>
+        <circle cx="50" cy="116" r="4" fill="#e09c6e" opacity=".6"/><circle cx="150" cy="116" r="4" fill="#e09c6e" opacity=".6"/>
+        <circle cx="100" cy="112" r="50" fill="url(#hFace)"/>
+        <path d="M100 58 C 66 58 50 86 52 108 C 56 80 76 70 100 70 C 124 70 144 80 148 108 C 150 86 134 58 100 58 Z" fill="url(#hHair)"/>
+        <path d="M75 97 Q84 92 93 97" stroke="#3b241c" stroke-width="3.4" fill="none" stroke-linecap="round"/>
+        <path d="M107 97 Q116 92 125 97" stroke="#3b241c" stroke-width="3.4" fill="none" stroke-linecap="round"/>
+        <g class="eyes">
+          <ellipse cx="84" cy="111" rx="5.4" ry="7.4" fill="#25201d"/>
+          <ellipse cx="116" cy="111" rx="5.4" ry="7.4" fill="#25201d"/>
+          <circle cx="86" cy="108.5" r="1.7" fill="#fff" opacity=".95"/>
+          <circle cx="118" cy="108.5" r="1.7" fill="#fff" opacity=".95"/>
+        </g>
+        <ellipse cx="68" cy="127" rx="10" ry="7" fill="url(#hCheek)"/>
+        <ellipse cx="132" cy="127" rx="10" ry="7" fill="url(#hCheek)"/>
+        <path d="M100 118 q3 6 -2 9" stroke="#d99b6d" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+        <path d="M87 133 Q100 144 113 133" stroke="#a2543f" stroke-width="3.6" fill="none" stroke-linecap="round"/>
+        <path d="M60 66 Q100 36 140 66 L 130 82 Q100 64 70 82 Z" fill="url(#hCap)" stroke="#c8dfe2" stroke-width="1.5"/>
+        <path d="M98 54 h4 v4 h4 v4 h-4 v4 h-4 v-4 h-4 v-4 h4 z" fill="#d9b96a"/>
+        <path d="M80 190 Q84 218 102 218 Q120 218 122 192" stroke="#caa24a" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+        <circle cx="102" cy="226" r="8" fill="url(#hGold)" stroke="#b28a1c" stroke-width="1.5"/>
+        <rect x="98.5" y="216" width="7" height="6" rx="2" fill="#caa24a"/>
+        <rect x="128" y="208" width="26" height="18" rx="5" fill="#1a1518" stroke="#d9b96a" stroke-width="2" transform="rotate(10 141 217)"/>
+        <circle cx="137" cy="214" r="3.4" fill="#d9b96a" transform="rotate(10 141 217)"/>
+        <rect x="132.5" y="219" width="14" height="2.4" rx="1.2" fill="#6b5a3e" transform="rotate(10 141 217)"/>
+      </svg>
+    </div>
+    <div class="chip c1" data-depth="14"><span class="ico">❤️</span><span><b>72 BPM</b> <small>· stable</small></span></div>
+    <div class="chip c2" data-depth="10"><span class="ico">💊</span><span><b>4 medicines</b> <small>· scheduled</small></span></div>
+    <div class="chip c3" data-depth="18"><span class="ico">📅</span><span><b>Follow-up</b> <small>· 7 days</small></span></div>
+    <div class="chip c4" data-depth="8"><span class="ico">🩺</span><span><b>Cardiology</b> <small>· Dr. Mehta</small></span></div>
+    <span class="particle" style="top:18%; left:16%;" data-depth="22"></span>
+    <span class="particle" style="top:30%; right:14%; animation-delay:1.2s;" data-depth="16"></span>
+    <span class="particle" style="bottom:28%; left:10%; animation-delay:2.1s;" data-depth="20"></span>
+    <span class="particle" style="top:8%; right:30%; animation-delay:.6s;" data-depth="12"></span>
+  </div>
+</section>
+
+<main>
+  <!-- INPUT -->
+  <div class="card reveal" id="inputCard">
+    <h2>📋 <span data-i18n="paste_label">Paste your discharge summary here</span></h2>
+    <textarea id="summaryText" placeholder="e.g. Patient: Mr. Ramesh Kumar, 58/M. Diagnosis: NSTEMI. Tab. Aspirin 75 mg OD post-breakfast ..."></textarea>
+    <div class="inputrow">
+      <label class="filelabel">📎 Upload PDF / TXT<input type="file" id="fileInp" accept=".txt,.pdf,.md"></label>
+      <button class="btn btn-ghost" id="sampleBtn" data-i18n="sample_btn">Load sample summary</button>
+      <button class="btn btn-gold" id="genBtn" data-i18n="generate_btn">✨ Generate my checklist</button>
+    </div>
+    <div class="hint" id="fileHint"></div>
+    <div class="aiPanel card" id="aiPanel" style="margin-top:14px; background:rgba(0,0,0,.22);">
+      <h2>🤖 Live AI mode</h2>
+      <div style="font-size:.85rem; color:var(--muted);">
+        By default the app runs in <b>demo mode</b> with a built-in sample. To process <i>any</i> discharge summary live,
+        paste a free Google Gemini API key (get one at <b>aistudio.google.com</b>). The key stays in this browser tab only.
+      </div>
+      <div class="row">
+        <input id="apiKey" type="password" placeholder="Paste Gemini API key (optional)">
+        <button class="btn btn-gold" id="aiSave">Use live AI</button>
+        <button class="btn btn-ghost" id="aiClear">Use demo mode</button>
+      </div>
+      <div style="margin-top:10px;">Mode: <span class="statuschip chip-demo" id="modeChip">DEMO MODE</span></div>
+    </div>
+    <details class="howto">
+      <summary>How it works (for judges)</summary>
+      <pre id="promptBox"></pre>
+    </details>
+  </div>
+
+  <!-- CHECKLIST -->
+  <div class="card reveal" id="checklistCard" style="display:none;">
+    <div class="toolbar">
+      <button class="btn btn-gold" id="readAllBtn">🔊 <span data-i18n="read_all">Read all</span></button>
+      <button class="btn btn-wine" id="quizBtn">🎓 <span data-i18n="quiz">Quiz me</span></button>
+      <button class="btn btn-ghost" id="talkBtn">🎙️ <span data-i18n="talk">Talk to Nisha</span></button>
+    </div>
+    <div class="sections">
+      <div class="sec diet"><h3><span class="badge">🍽️</span><span data-i18n="diet_title">Diet — what to eat</span></h3><ul id="listDiet"></ul></div>
+      <div class="sec meds"><h3><span class="badge">💊</span><span data-i18n="meds_title">Medicines — what to take, and when</span></h3><ul id="listMeds"></ul></div>
+      <div class="sec warn"><h3><span class="badge">🚩</span><span data-i18n="warn_title">Warning signs — go to hospital immediately</span></h3><ul id="listWarn"></ul></div>
+      <div class="sec follow"><h3><span class="badge">📅</span><span data-i18n="follow_title">Follow-up</span></h3><ul id="listFollow"></ul></div>
+    </div>
+  </div>
+
+  <!-- QUIZ -->
+  <div class="card qcard reveal" id="quizCard">
+    <div class="quizhead">
+      <h2 style="margin:0;">🎓 <span data-i18n="quiz">Quiz me</span></h2>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span style="font-size:.8rem; color:var(--muted); font-weight:700;" id="quizScore"></span>
+        <div class="ringwrap">
+          <svg width="56" height="56"><circle class="track" cx="28" cy="28" r="22"/><circle class="prog" id="ringProg" cx="28" cy="28" r="22"/></svg>
+          <span class="rlabel" id="ringLabel">0/3</span>
+        </div>
+      </div>
+    </div>
+    <div class="qbox">
+      <div class="qn" id="qNum"></div>
+      <div class="qt" id="qText"></div>
+      <button class="btn btn-gold" id="ansBtn">🎙️ Answer by voice</button>
+      <button class="btn btn-ghost" id="skipBtn">Skip →</button>
+      <div class="qresult" id="qResult"></div>
+    </div>
+  </div>
+
+  <footer>
+    Built at Innovator's League 2026 · Aarogya Saathi — “Others translate the discharge summary. We verify the patient understood it.”<br>
+    <span class="disc">AI-generated guidance · not a substitute for professional medical advice</span>
+  </footer>
+</main>
+
+<!-- NISHA AVATAR -->
+<div class="avatar-wrap">
+  <div class="bubble" id="bubble"></div>
+  <button class="avatar-btn" id="nishaBtn" title="Talk to Nisha">
+    <span class="halo"></span>
+    <svg class="avatar-svg" viewBox="0 0 200 260" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="gHair" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#57392e"/><stop offset="1" stop-color="#2c1b14"/></linearGradient>
+        <radialGradient id="gFace" cx="0.42" cy="0.36" r="0.85"><stop offset="0" stop-color="#ffe9cd"/><stop offset="1" stop-color="#f0ba8c"/></radialGradient>
+        <linearGradient id="gCap" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#dfeef0"/></linearGradient>
+        <linearGradient id="gScrub" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a13347"/><stop offset="1" stop-color="#4d121f"/></linearGradient>
+        <radialGradient id="gCheek" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ff9d84" stop-opacity=".75"/><stop offset="1" stop-color="#ff9d84" stop-opacity="0"/></radialGradient>
+        <linearGradient id="gGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe08a"/><stop offset="1" stop-color="#d9a520"/></linearGradient>
+      </defs>
+      <path d="M28 260 C32 208 66 186 100 186 C134 186 168 208 172 260 Z" fill="url(#gScrub)"/>
+      <path d="M86 186 L100 204 L114 186 L106 184 L100 196 L94 184 Z" fill="#f7e3d5" opacity=".9"/>
+      <rect x="88" y="156" width="24" height="34" rx="10" fill="#e8ab7e"/>
+      <ellipse cx="100" cy="160" rx="14" ry="5" fill="#00000012"/>
+      <ellipse cx="100" cy="112" rx="57" ry="60" fill="url(#gHair)"/>
+      <circle cx="50" cy="116" r="8.5" fill="#f0ba8c"/><circle cx="150" cy="116" r="8.5" fill="#f0ba8c"/>
+      <circle cx="50" cy="116" r="4" fill="#e09c6e" opacity=".6"/><circle cx="150" cy="116" r="4" fill="#e09c6e" opacity=".6"/>
+      <circle cx="100" cy="112" r="50" fill="url(#gFace)"/>
+      <path d="M100 58 C 66 58 50 86 52 108 C 56 80 76 70 100 70 C 124 70 144 80 148 108 C 150 86 134 58 100 58 Z" fill="url(#gHair)"/>
+      <path d="M75 97 Q84 92 93 97" stroke="#3b241c" stroke-width="3.4" fill="none" stroke-linecap="round"/>
+      <path d="M107 97 Q116 92 125 97" stroke="#3b241c" stroke-width="3.4" fill="none" stroke-linecap="round"/>
+      <g class="eyes">
+        <ellipse cx="84" cy="111" rx="5.4" ry="7.4" fill="#25201d"/>
+        <ellipse cx="116" cy="111" rx="5.4" ry="7.4" fill="#25201d"/>
+        <circle cx="86" cy="108.5" r="1.7" fill="#fff" opacity=".95"/>
+        <circle cx="118" cy="108.5" r="1.7" fill="#fff" opacity=".95"/>
+      </g>
+      <ellipse cx="68" cy="127" rx="10" ry="7" fill="url(#gCheek)"/>
+      <ellipse cx="132" cy="127" rx="10" ry="7" fill="url(#gCheek)"/>
+      <path d="M100 118 q3 6 -2 9" stroke="#d99b6d" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+      <path class="mouth-smile" d="M87 133 Q100 144 113 133" stroke="#a2543f" stroke-width="3.6" fill="none" stroke-linecap="round"/>
+      <g class="mouth-open">
+        <ellipse cx="100" cy="137" rx="11" ry="8" fill="#8c4a3c"/>
+        <path d="M91 133 Q100 130 109 133" stroke="#a2543f" stroke-width="3" fill="none" stroke-linecap="round"/>
+      </g>
+      <path d="M60 66 Q100 36 140 66 L 130 82 Q100 64 70 82 Z" fill="url(#gCap)" stroke="#c8dfe2" stroke-width="1.5"/>
+      <path d="M98 54 h4 v4 h4 v4 h-4 v4 h-4 v-4 h-4 v-4 h4 z" fill="#d9b96a"/>
+      <path d="M80 190 Q84 218 102 218 Q120 218 122 192" stroke="#caa24a" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+      <circle cx="102" cy="226" r="8" fill="url(#gGold)" stroke="#b28a1c" stroke-width="1.5"/>
+      <rect x="98.5" y="216" width="7" height="6" rx="2" fill="#caa24a"/>
+      <rect x="128" y="208" width="26" height="18" rx="5" fill="#1a1518" stroke="#d9b96a" stroke-width="2" transform="rotate(10 141 217)"/>
+      <circle cx="137" cy="214" r="3.4" fill="#d9b96a" transform="rotate(10 141 217)"/>
+      <rect x="132.5" y="219" width="14" height="2.4" rx="1.2" fill="#6b5a3e" transform="rotate(10 141 217)"/>
+    </svg>
+    <span class="eq"><span></span><span></span><span></span><span></span><span></span></span>
+  </button>
+  <div class="avatar-shadow"></div>
+  <div class="avatar-cap" id="nishaCap">Nisha 🩺</div>
+</div>
+<div class="listen-note" id="listenNote"></div>
+
+<script>
+"use strict";
+
+/* ================= CONFIG ================= */
+const GEMINI_MODEL = "gemini-2.0-flash";
+let apiKey = ""; // empty = demo mode
+
+const LANGS = { en:{code:"en-IN", name:"English"}, hi:{code:"hi-IN", name:"Hindi"}, ta:{code:"ta-IN", name:"Tamil"} };
+let lang = "en";
+
+/* ================= I18N ================= */
+const I18N = {
+en:{
+  tagline:"Discharge summary → simple daily checklist, in your language",
+  paste_label:"Paste your discharge summary here",
+  sample_btn:"Load sample summary",
+  generate_btn:"✨ Generate my checklist",
+  diet_title:"Diet — what to eat",
+  meds_title:"Medicines — what to take, and when",
+  warn_title:"Warning signs — go to hospital immediately",
+  follow_title:"Follow-up",
+  read_all:"Read all",
+  talk:"Talk to Nisha",
+  quiz:"Quiz me",
+  greeting:"Hello! I am Nisha, your care assistant. Your discharge summary is now a simple daily checklist. Ask me to read your medicines, your diet, the warning signs, or your follow-up date.",
+  q1:"Question 1 of 3: When should you take the Aspirin tablet?",
+  q2:"Question 2 of 3: Which type of food should you avoid?",
+  q3:"Question 3 of 3: After how many days is your follow-up visit?",
+  ok:"Correct!",
+  no:"Not quite. The right answer is:",
+  done:"Great job! You understood your care plan well.",
+  a1:"after breakfast", a2:"fried food", a3:"seven days",
+  need_checklist:"Please generate your checklist first. Paste your discharge summary and press generate.",
+  listening:"🎧 Nisha is listening… try: “read my medicines” / “quiz me” / “stop”",
+  nope:"Sorry, I didn't catch that. Say “help” to hear what I can do."
+},
+hi:{
+  tagline:"डिस्चार्ज समरी → आसान डेली चेकलिस्ट, आपकी भाषा में",
+  paste_label:"अपनी डिस्चार्ज समरी यहाँ पेस्ट करें",
+  sample_btn:"सैंपल समरी लोड करें",
+  generate_btn:"✨ मेरी चेकलिस्ट बनाएँ",
+  diet_title:"डाइट — क्या खाएं",
+  meds_title:"दवाइयाँ — क्या लें, और कब",
+  warn_title:"चेतावनी के संकेत — तुरंत अस्पताल जाएँ",
+  follow_title:"फॉलो-अप",
+  read_all:"सब पढ़ें",
+  talk:"निशा से बात करें",
+  quiz:"मुझसे क्विज़ लें",
+  greeting:"नमस्ते! मैं निशा हूँ, आपकी केयर असिस्टेंट। आपकी डिस्चार्ज समरी अब एक आसान डेली चेकलिस्ट है। मुझसे अपनी दवाइयाँ, डाइट, चेतावनी के संकेत, या अपनी फॉलो-अप डेट के बारे में पूछें।",
+  q1:"3 में से सवाल 1: आपको एस्पिरिन की गोली कब लेनी चाहिए?",
+  q2:"3 में से सवाल 2: आपको किस तरह का खाना नहीं खाना चाहिए?",
+  q3:"3 में से सवाल 3: आपकी फॉलो-अप विज़िट कितने दिनों के बाद है?",
+  ok:"सही!",
+  no:"बिल्कुल सही नहीं। सही जवाब है:",
+  done:"बहुत बढ़िया! आपने अपनी केयर प्लान को अच्छे से समझ लिया है।",
+  a1:"नाश्ते के बाद", a2:"तला हुआ खाना", a3:"सात दिन",
+  need_checklist:"कृपया पहले अपनी चेकलिस्ट बनाएँ। डिस्चार्ज समरी पेस्ट करें और ‘मेरी चेकलिस्ट बनाएँ’ दबाएँ।",
+  listening:"🎧 निशा सुन रही है… कहें: “मेरी दवाइयाँ पढ़ो” / “क्विज़” / “रुको”",
+  nope:"माफ़ कीजिए, समझ नहीं आया। “मदद” कहें तो मैं बता दूँगी क्या-क्या कर सकती हूँ।"
+},
+ta:{
+  tagline:"டிஸ்சார்ஜ் சுருக்கம் → எளிய தினசரி செக்லிஸ்ட், உங்கள் மொழியில்",
+  paste_label:"உங்கள் டிஸ்சார்ஜ் சுருக்கத்தை இங்கே பேஸ்ட் செய்யவும்",
+  sample_btn:"மாதிரி சுருக்கத்தை லோட் செய்யவும்",
+  generate_btn:"✨ எனது செக்லிஸ்ட்டை உருவாக்கவும்",
+  diet_title:"உணவு — என்ன சாப்பிட வேண்டும்",
+  meds_title:"மருந்துகள் — என்ன சாப்பிட வேண்டும், எப்போது சாப்பிட வேண்டும்",
+  warn_title:"எச்சரிக்கை அறிகுறிகள் — உடனடியாக மருத்துவமனைக்குச் செல்லவும்",
+  follow_title:"அடுத்த மருத்துவப் பரிசோதனை",
+  read_all:"அனைத்தையும் படிக்கவும்",
+  talk:"நிஷாவிடம் பேசவும்",
+  quiz:"என்னிடம் வினாடி வினா கேட்கவும்",
+  greeting:"வணக்கம்! நான் நிஷா, உங்கள் கேர் அசிஸ்டன்ட். உங்கள் டிஸ்சார்ஜ் சுருக்கம் இப்போது ஒரு எளிய தினசரி செக்லிஸ்ட். உங்கள் மருந்துகள், உணவு முறை, எச்சரிக்கை அறிகுறிகள் அல்லது உங்களின் அடுத்த மருத்துவப் பரிசோதனை தேதியைப் படிக்க என்னிடம் கேளுங்கள்.",
+  q1:"3-ல் கேள்வி 1: நீங்கள் ஆஸ்பிரின் மாத்திரையை எப்போது சாப்பிட வேண்டும்?",
+  q2:"3-ல் கேள்வி 2: நீங்கள் எந்த வகையான உணவைத் தவிர்க்க வேண்டும்?",
+  q3:"3-ல் கேள்வி 3: உங்கள் அடுத்த மருத்துவப் பரிசோதனை எத்தனை நாட்களுக்குப் பிறகு?",
+  ok:"சரி!",
+  no:"சரியாக இல்லை. சரியான பதில்:",
+  done:"அருமை! உங்கள் கேர் பிளானை நீங்கள் நன்றாகப் புரிந்து கொண்டீர்கள்.",
+  a1:"காலை உணவுக்குப் பிறகு", a2:"பொரித்த உணவு", a3:"ஏழு நாட்கள்",
+  need_checklist:"முதலில் உங்கள் செக்லிஸ்ட்டை உருவாக்கவும். டிஸ்சார்ஜ் சுருக்கத்தை பேஸ்ட் செய்து உருவாக்கவும் அழுத்துங்கள்.",
+  listening:"🎧 நிஷா கேட்கிறார்… சொல்லுங்கள்: “மருந்துகளைப் படி” / “வினா” / “நிறுத்து”",
+  nope:"மன்னிக்கவும், புரியவில்லை. “உதவி” என்று சொன்னால் நான் என்ன செய்ய முடியும் என்று சொல்கிறேன்."
+}};
+
+/* ================= DEMO DATA ================= */
+const DEMO = {
+en:{ diet:["Eat low-salt food — less than one teaspoon of salt per day","Avoid fried and oily food","Eat fresh vegetables and fruits every day"],
+  medicines:["Aspirin 75 mg — one tablet after breakfast at 8 AM","Atorvastatin 40 mg — one tablet at bedtime, 10 PM","Metoprolol 25 mg — one tablet at 8 AM and 8 PM","Pantoprazole 40 mg — thirty minutes before breakfast"],
+  warnings:["Chest pain or heaviness","Breathlessness","Palpitations — heart beating too fast","Dizziness or fainting"],
+  followup:["Visit the cardiology OPD after 7 days with your lipid profile and blood sugar reports"] },
+hi:{ diet:["कम नमक वाला खाना खाएं — दिन में एक चम्मच से कम नमक","तला-भुना और ज़्यादा तेल वाला खाना न खाएं","हर दिन ताज़ी सब्जियाँ और फल खाएं"],
+  medicines:["एस्पिरिन 75 mg — सुबह 8 बजे नाश्ते के बाद एक गोली","एटोरवास्टेटिन 40 mg — रात 10 बजे सोते समय एक गोली","मेटोप्रोलोल 25 mg — सुबह 8 बजे और रात 8 बजे एक-एक गोली","पैंटोप्राज़ोल 40 mg — नाश्ते से तीस मिनट पहले"],
+  warnings:["सीने में दर्द या भारीपन","सांस फूलना","दिल की धड़कन तेज़ होना — धड़कन बहुत तेज़ होना","चक्कर आना या बेहोशी"],
+  followup:["7 दिनों के बाद अपने लिपिड प्रोफाइल और ब्लड शुगर रिपोर्ट के साथ कार्डियोलॉजी ओपीडी में जाएँ"] },
+ta:{ diet:["குறைந்த உப்புள்ள உணவைச் சாப்பிடவும் — ஒரு நாளைக்கு ஒரு டீஸ்பூனுக்கும் குறைவான உப்பு","பொரித்த மற்றும் எண்ணெய் உணவுகளைத் தவிர்க்கவும்","தினமும் புதிய காய்கறிகள் மற்றும் பழங்களைச் சாப்பிடவும்"],
+  medicines:["ஆஸ்பிரின் 75 mg — காலை 8 மணிக்கு காலை உணவுக்குப் பிறகு ஒரு மாத்திரை","அட்டோர்வாஸ்டாடின் 40 mg — இரவு 10 மணிக்கு தூங்கும் போது ஒரு மாத்திரை","மெட்ரோப்ரோலோல் 25 mg — காலை 8 மணி மற்றும் இரவு 8 மணிக்கு தலா ஒரு மாத்திரை","பேண்டோப்ராசோல் 40 mg — காலை உணவுக்கு 30 நிமிடங்களுக்கு முன்"],
+  warnings:["நெஞ்சு வலி அல்லது நெஞ்சு பாரமாக இருப்பது","மூச்சுத் திணறல்","படபடப்பு — இதயம் மிக வேகமாகத் துடிப்பது","தலைசுற்றல் அல்லது மயக்கம்"],
+  followup:["உங்கள் லிப்பிட் புரொஃபைல் மற்றும் ரத்த சர்க்கரை ரிப்போர்ட்டுகளுடன் 7 நாட்களுக்குப் பிறகு கார்டியாலஜி OPD-க்குச் செல்லவும்"] }
+};
+
+const SAMPLE_SUMMARY = `Patient: Mr. Ramesh Kumar, 58/M, MRN 48219. Date of discharge: 25/09/2026.
+Diagnosis: Acute Coronary Syndrome (NSTEMI). Underwent PCI with DES to LAD. Procedure uneventful; patient hemodynamically stable.
+Medications at discharge:
+Tab. Aspirin 75 mg — OD, post-breakfast
+Tab. Atorvastatin 40 mg — HS
+Tab. Metoprolol 25 mg — BD (8 AM, 8 PM)
+Tab. Pantoprazole 40 mg — before breakfast
+Diet & lifestyle: salt restriction (<5 g/day), low-oil diet, avoid fried foods. Gradual mobilization; no heavy lifting (>5 kg) for 2 weeks.
+Red flags: recurrence of chest pain, dyspnea, palpitations, syncope — report to ER immediately.
+Follow-up: Cardiology OPD after 7 days with lipid profile and RBS reports.`;
+
+const LLM_PROMPT_TEMPLATE = `You are a hospital discharge assistant. Convert the discharge summary below into a simple daily checklist for a patient with no medical background. Output language: {LANGUAGE}. Use very simple words a family member can understand. Return ONLY valid JSON (no markdown fences) with exactly these keys:
+"diet": array of 3-6 short food instructions,
+"medicines": array of strings, each "Medicine name dose — time and how to take it",
+"warnings": array of 3-6 warning signs that need an immediate hospital visit,
+"followup": array of 1-3 follow-up instructions.
+DISCHARGE SUMMARY:
+{SUMMARY}`;
+
+/* ================= STATE ================= */
+let currentData = null;   // checklist object currently shown
+let liveMode = false;     // true = data came from LLM
+let voiceMode = false;    // Nisha listening
+let isSpeaking = false;
+let quizIdx = -1, quizScore = 0;
+
+/* ================= HELPERS ================= */
+const $ = id => document.getElementById(id);
+const T = () => I18N[lang];
+
+function applyI18n(){
+  document.querySelectorAll("[data-i18n]").forEach(el=>{
+    const k = el.getAttribute("data-i18n");
+    if(T()[k] !== undefined) el.textContent = T()[k];
+  });
+  $("promptBox").textContent = LLM_PROMPT_TEMPLATE.replace("{LANGUAGE}", LANGS[lang].name).replace("{SUMMARY}", "(your discharge summary)");
+  $("listenNote").textContent = T().listening;
+}
+
+/* ================= 3D MICRO-INTERACTIONS ================= */
+function addTilt(el){
+  el.addEventListener("animationend", ()=>{ el.style.animation = "none"; el.style.opacity = "1"; el.style.transform = "none"; });
+  el.addEventListener("mousemove", e=>{
+    const r = el.getBoundingClientRect();
+    const x = (e.clientX - r.left)/r.width - 0.5;
+    const y = (e.clientY - r.top)/r.height - 0.5;
+    el.style.transform = `perspective(900px) rotateY(${(x*7).toFixed(2)}deg) rotateX(${(-y*7).toFixed(2)}deg) translateY(-4px)`;
+    el.style.boxShadow = "0 34px 70px rgba(0,0,0,.6)";
+    el.style.borderColor = "var(--hairline)";
+  });
+  el.addEventListener("mouseleave", ()=>{
+    el.style.transform = "";
+    el.style.boxShadow = "";
+    el.style.borderColor = "";
+  });
+}
+document.querySelectorAll(".sec, .qbox").forEach(addTilt);
+
+/* hero parallax */
+const heroStage = $("heroStage");
+document.addEventListener("mousemove", e=>{
+  if(window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const nx = (e.clientX/window.innerWidth - .5), ny = (e.clientY/window.innerHeight - .5);
+  heroStage.querySelectorAll("[data-depth]").forEach(el=>{
+    const d = parseFloat(el.getAttribute("data-depth")) || 8;
+    el.style.translate = `${(-nx*d).toFixed(1)}px ${(-ny*d).toFixed(1)}px`;
+  });
+});
+
+/* scroll reveal */
+const revealObs = new IntersectionObserver(entries=>{
+  entries.forEach(en=>{ if(en.isIntersecting){ en.target.classList.add("in"); revealObs.unobserve(en.target); } });
+},{threshold:.12});
+document.querySelectorAll(".reveal").forEach(el=>revealObs.observe(el));
+
+/* ================= SPEECH (TTS) ================= */
+let voices = [];
+function loadVoices(){ voices = window.speechSynthesis ? speechSynthesis.getVoices() : []; }
+if(window.speechSynthesis){ loadVoices(); speechSynthesis.onvoiceschanged = loadVoices; }
+
+function pickVoice(){
+  const code = LANGS[lang].code;
+  let v = voices.find(x => x.lang && x.lang.toLowerCase().replace("_","-").startsWith(code.toLowerCase()) && /google/i.test(x.name));
+  if(!v) v = voices.find(x => x.lang && x.lang.toLowerCase().replace("_","-").startsWith(code.toLowerCase()));
+  return v || null;
+}
+
+function chunkText(t){
+  const parts = String(t).split(/(?<=[।.!?])\s+/).filter(Boolean);
+  const out = []; let cur = "";
+  for(const p of parts){ if((cur+" "+p).length > 180){ if(cur) out.push(cur.trim()); cur = p; } else cur += " "+p; }
+  if(cur.trim()) out.push(cur.trim());
+  return out.length ? out : [String(t)];
+}
+
+function speak(text, onDone){
+  if(!window.speechSynthesis){ if(onDone) onDone(); return; }
+  speechSynthesis.cancel();
+  const chunks = chunkText(text);
+  const v = pickVoice();
+  let done = 0;
+  isSpeaking = true;
+  $("nishaBtn").classList.add("speaking");
+  if(voiceMode && rec) try{ rec.abort(); }catch(e){}
+  chunks.forEach(c=>{
+    const u = new SpeechSynthesisUtterance(c);
+    u.lang = LANGS[lang].code;
+    if(v) u.voice = v;
+    u.rate = 0.95; u.pitch = 1.05;
+    u.onend = ()=>{ done++; if(done >= chunks.length){ isSpeaking=false; $("nishaBtn").classList.remove("speaking"); if(onDone) onDone(); if(voiceMode) startListening(); } };
+    u.onerror = ()=>{ done++; if(done >= chunks.length){ isSpeaking=false; $("nishaBtn").classList.remove("speaking"); if(onDone) onDone(); } };
+    speechSynthesis.speak(u);
+  });
+}
+
+function stopSpeaking(){
+  if(window.speechSynthesis) speechSynthesis.cancel();
+  isSpeaking = false; $("nishaBtn").classList.remove("speaking");
+}
+
+function showBubble(text){
+  const b = $("bubble");
+  b.textContent = text.length > 160 ? text.slice(0,157)+"…" : text;
+  b.classList.add("show");
+  clearTimeout(showBubble._t);
+  showBubble._t = setTimeout(()=>b.classList.remove("show"), 5000);
+}
+
+/* ================= SPEECH (STT) ================= */
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+let rec = null;
+
+function makeRec(){
+  if(!SR) return null;
+  const r = new SR();
+  r.lang = LANGS[lang].code;
+  r.interimResults = false;
+  r.maxAlternatives = 1;
+  return r;
+}
+
+function startListening(){
+  if(!SR || !voiceMode) return;
+  try{ if(rec) rec.abort(); }catch(e){}
+  rec = makeRec();
+  if(!rec) return;
+  rec.onresult = e=>{
+    const t = e.results[0][0].transcript;
+    showBubble("🗣️ " + t);
+    handleCommand(t.toLowerCase());
+  };
+  rec.onerror = ()=>{ /* keep silent, restart below */ };
+  rec.onend = ()=>{ if(voiceMode && !isSpeaking) setTimeout(startListening, 300); };
+  try{ rec.start(); }catch(e){}
+}
+
+function listenOnce(cb){
+  if(!SR){ cb(prompt("Speech recognition not supported. Type your answer:")); return; }
+  const r = makeRec();
+  if(!r){ cb(prompt("Speech recognition not supported. Type your answer:")); return; }
+  showBubble("🎧 …");
+  r.onresult = e=>{ cb(e.results[0][0].transcript); };
+  r.onerror = ()=>{ cb(""); };
+  try{ r.start(); }catch(e){ cb(""); }
+}
+
+/* ================= VOICE COMMANDS ================= */
+const INTENTS = [
+  {name:"stop",    kw:["stop","quiet","silence","shut up","ruko","rok do","band","रुको","बंद","niruthu","நிறுத்து","போதும்"]},
+  {name:"quiz",    kw:["quiz","question","test me","kwiz","क्विज़","क्विज","सवाल","வினா","வினாடி"]},
+  {name:"generate",kw:["generate","make my checklist","make checklist","create checklist","बनाओ","बनाए","உருவாக்கு"]},
+  {name:"repeat",  kw:["repeat","again","say again","dobara","दोबारा","फिर","thirumba","மீண்டும்"]},
+  {name:"meds",    kw:["medicine","medicines","meds","tablet","tablets","pill","pills","dawa","dawai","davai","दवा","दवाई","दवाइयाँ","marundhu","marunthu","மருந்து","மருந்துகள்"]},
+  {name:"diet",    kw:["diet","food","eat","eating","meal","meals","khana","खाना","खाए","खाओ","डाइट","saappadu","saapadu","சாப்பாடு","உணவு"]},
+  {name:"warnings",kw:["warning","warnings","danger","red flag","symptom","symptoms","chetavni","chetav","चेतावनी","खतरा","echcharikkai","எச்சரிக்கை"]},
+  {name:"follow",  kw:["follow","follow up","follow-up","appointment","doctor visit","opd","फॉलो","डॉक्टर","மருத்துவர்","மருத்துவ"]},
+  {name:"readAll", kw:["read all","read everything","read the checklist","padho","padho sab","पढ़ो","सब पढ़ो","ellam padu","எல்லாம் படி","படி"]},
+  {name:"help",    kw:["help","what can you do","madad","मदद","udhavi","உதவி"]}
+];
+
+let lastSpoken = "";
+
+function sectionText(key){
+  const titles = {diet:T().diet_title, medicines:T().meds_title, warnings:T().warn_title, followup:T().follow_title};
+  const items = currentData[key] || [];
+  return titles[key] + ". " + items.join(". ") + ".";
+}
+
+function handleCommand(t){
+  t = String(t).toLowerCase().trim();
+  if(!t || isSpeaking) return;
+  const intent = INTENTS.find(i => i.kw.some(k => t.includes(k)));
+  if(!intent){ speak(T().nope); showBubble(T().nope); return; }
+  switch(intent.name){
+    case "stop":
+      voiceMode = false; stopSpeaking(); updateTalkUI(); showBubble("😴"); return;
+    case "generate":
+      $("genBtn").click(); return;
+    case "quiz":
+      if(!currentData){ speak(T().need_checklist); return; }
+      startQuiz(); return;
+    case "repeat":
+      if(lastSpoken){ speak(lastSpoken); return; }
+      break;
+    case "readAll":
+      if(!currentData){ speak(T().need_checklist); return; }
+      readAll(); return;
+    case "meds": case "diet": case "warnings": case "follow":
+      if(!currentData){ speak(T().need_checklist); return; }
+      lastSpoken = sectionText(intent.name === "follow" ? "followup" : intent.name === "meds" ? "medicines" : intent.name);
+      speak(lastSpoken); return;
+    case "help":
+      lastSpoken = T().listening;
+      speak(lastSpoken); return;
+  }
+}
+
+function updateTalkUI(){
+  $("nishaBtn").classList.toggle("listening", voiceMode);
+  $("listenNote").classList.toggle("show", voiceMode);
+  $("nishaCap").textContent = voiceMode ? "Nisha 🎧" : "Nisha 🩺";
+}
+
+/* ================= CHECKLIST ================= */
+function renderChecklist(){
+  const fill = (listId, arr) => {
+    const ul = $(listId); ul.innerHTML = "";
+    arr.forEach(item=>{
+      const li = document.createElement("li");
+      const span = document.createElement("span"); span.textContent = item;
+      const b = document.createElement("button"); b.className = "spk"; b.textContent = "🔊";
+      b.title = "Read aloud"; b.onclick = ()=>{ lastSpoken = item; speak(item); };
+      li.appendChild(span); li.appendChild(b); ul.appendChild(li);
+    });
+  };
+  fill("listDiet", currentData.diet || []);
+  fill("listMeds", currentData.medicines || []);
+  fill("listWarn", currentData.warnings || []);
+  fill("listFollow", currentData.followup || []);
+  $("checklistCard").style.display = "";
+  // retrigger 3D entrance animation
+  document.querySelectorAll(".sec").forEach(s=>{ s.style.animation = "none"; void s.offsetWidth; s.style.animation = ""; });
+}
+
+function readAll(){
+  if(!currentData) return;
+  const txt = [sectionText("diet"), sectionText("medicines"), sectionText("warnings"), sectionText("followup")].join(" ");
+  lastSpoken = txt; speak(txt);
+}
+
+async function generate(){
+  const summary = $("summaryText").value.trim();
+  if(!summary){ $("summaryText").value = SAMPLE_SUMMARY; }
+  const text = $("summaryText").value.trim();
+  $("genBtn").disabled = true; $("genBtn").textContent = "⏳ …";
+  $("nishaBtn").classList.add("thinking");
+  try{
+    if(apiKey){
+      const data = await callGemini(text);
+      if(data){ currentData = data; liveMode = true; }
+      else throw new Error("bad response");
+    }else{
+      await new Promise(r=>setTimeout(r,700)); // small "thinking" delay for demo feel
+      currentData = DEMO[lang]; liveMode = false;
+    }
+    renderChecklist();
+    window.scrollTo({top: document.body.scrollHeight, behavior:"smooth"});
+    lastSpoken = T().greeting; speak(T().greeting);
+  }catch(err){
+    alert("Live AI failed — falling back to demo mode. Check the API key. (" + err.message + ")");
+    currentData = DEMO[lang]; liveMode = false; renderChecklist();
+  }finally{
+    $("genBtn").disabled = false; applyI18n();
+    $("nishaBtn").classList.remove("thinking");
+  }
+}
+
+/* ================= GEMINI ================= */
+async function callGemini(summaryText){
+  const prompt = LLM_PROMPT_TEMPLATE.replace("{LANGUAGE}", LANGS[lang].name).replace("{SUMMARY}", summaryText);
+  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${encodeURIComponent(apiKey)}`, {
+    method:"POST", headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({ contents:[{ parts:[{ text: prompt }] }] })
+  });
+  if(!res.ok) throw new Error("HTTP " + res.status);
+  const j = await res.json();
+  let txt = j.candidates[0].content.parts[0].text.trim();
+  txt = txt.replace(/^```(json)?/i,"").replace(/```$/,"").trim();
+  const data = JSON.parse(txt);
+  if(!data.diet && !data.medicines && !data.warnings) throw new Error("missing keys");
+  return data;
+}
+
+/* ================= QUIZ ================= */
+const QUIZ_KEYS = ["q1","q2","q3"];
+const QUIZ_ANSWERS = [
+  {key:"a1", kwAny:["breakfast","morning","8 am","नाश्ते","नाश्ता","सुबह","காலை உணவு","காலை"]},
+  {key:"a2", kwAny:["fried","oil","oily","तला","तली","तले","तेल","பொரித்த","எண்ணெய்"]},
+  {key:"a3", kwAny:["7","seven","सात","एक हफ्ते","ஏழு","week","हफ्ता"]}
+];
+const RING_C = 138.2;
+
+function updateQuizRing(){
+  const done = Math.min(quizIdx, 3);
+  $("ringProg").style.strokeDashoffset = (RING_C * (1 - done/3)).toFixed(1);
+  $("ringLabel").textContent = done + "/3";
+}
+
+function startQuiz(){
+  quizIdx = 0; quizScore = 0;
+  $("quizCard").style.display = "block";
+  $("checklistCard").style.display = "";
+  $("quizCard").classList.add("in");
+  updateQuizRing();
+  $("quizCard").scrollIntoView({behavior:"smooth"});
+  askQuestion();
+}
+
+function askQuestion(){
+  updateQuizRing();
+  if(quizIdx >= 3){
+    $("qResult").textContent = T().done; $("qResult").className = "qresult ok";
+    speak(T().done);
+    $("qText").textContent = "🎉"; $("qNum").textContent = "";
+    $("quizScore").textContent = quizScore + "/3";
+    return;
+  }
+  $("qNum").textContent = (quizIdx+1) + " / 3";
+  $("qText").textContent = T()[QUIZ_KEYS[quizIdx]];
+  $("qResult").textContent = ""; $("qResult").className = "qresult";
+  $("quizScore").textContent = quizScore + "/3";
+  speak(T()[QUIZ_KEYS[quizIdx]], ()=>{ listenOnce(checkQuizAnswer); });
+}
+
+function checkQuizAnswer(transcript){
+  const t = String(transcript||"").toLowerCase();
+  const ans = QUIZ_ANSWERS[quizIdx];
+  const correct = t && ans.kwAny.some(k => t.includes(k.toLowerCase()));
+  const resEl = $("qResult");
+  if(correct){ quizScore++; resEl.textContent = "✅ " + T().ok; resEl.className = "qresult ok"; }
+  else { resEl.textContent = "❌ " + T().no + " " + T()[ans.key]; resEl.className = "qresult no"; }
+  const spoken = correct ? T().ok : T().no + " " + T()[ans.key];
+  speak(spoken, ()=>{ quizIdx++; setTimeout(askQuestion, 300); });
+}
+
+/* ================= FILE UPLOAD ================= */
+async function handleFile(file){
+  try{
+    if(file.name.toLowerCase().endsWith(".pdf")){
+      if(typeof pdfjsLib === "undefined"){ $("fileHint").textContent = "PDF reader unavailable offline — please paste the text."; return; }
+      pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+      const buf = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({data: buf}).promise;
+      let text = "";
+      for(let p=1; p<=pdf.numPages; p++){
+        const page = await pdf.getPage(p);
+        const tc = await page.getTextContent();
+        text += tc.items.map(i=>i.str).join(" ") + "\n";
+      }
+      $("summaryText").value = text.trim();
+      $("fileHint").textContent = "✅ Extracted " + pdf.numPages + " page(s) from PDF.";
+    } else {
+      $("summaryText").value = await file.text();
+      $("fileHint").textContent = "✅ Loaded " + file.name;
+    }
+  }catch(e){ $("fileHint").textContent = "Could not read file — paste the text instead."; }
+}
+
+/* ================= WIRE UP ================= */
+$("langSel").onchange = e=>{
+  lang = e.target.value;
+  applyI18n();
+  if(currentData && !liveMode){ currentData = DEMO[lang]; renderChecklist(); }
+  if(voiceMode){ try{ if(rec) rec.abort(); }catch(x){} startListening(); }
+};
+
+$("sampleBtn").onclick = ()=>{ $("summaryText").value = SAMPLE_SUMMARY; $("fileHint").textContent = "Sample summary loaded — press Generate!"; };
+$("genBtn").onclick = generate;
+$("readAllBtn").onclick = readAll;
+$("printBtn").onclick = ()=>window.print();
+$("quizBtn").onclick = ()=>{ if(!currentData){ alert(T().need_checklist); return; } startQuiz(); };
+$("ansBtn").onclick = ()=>{ stopSpeaking(); listenOnce(checkQuizAnswer); };
+$("skipBtn").onclick = ()=>{ stopSpeaking(); quizIdx++; askQuestion(); };
+
+function toggleVoice(){
+  voiceMode = !voiceMode;
+  updateTalkUI();
+  if(voiceMode){
+    if(!SR){ alert("Voice input needs Chrome or Edge. Text and text-to-speech still work everywhere."); voiceMode=false; updateTalkUI(); return; }
+    if(!currentData){ speak(T().need_checklist); showBubble(T().need_checklist); }
+    else { lastSpoken = T().greeting; speak(T().greeting); }
+    startListening();
+  } else {
+    stopSpeaking();
+    try{ if(rec) rec.abort(); }catch(e){}
+    showBubble("👋");
+  }
+}
+$("talkBtn").onclick = toggleVoice;
+$("nishaBtn").onclick = toggleVoice;
+$("ctaTalk").onclick = ()=>{ if(!voiceMode) toggleVoice(); $("summaryText").scrollIntoView({behavior:"smooth", block:"center"}); };
+$("ctaStart").onclick = ()=>{
+  $("inputCard").scrollIntoView({behavior:"smooth", block:"center"});
+  setTimeout(()=>{ if(!$("summaryText").value){ $("sampleBtn").click(); } }, 700);
+};
+
+$("aiBtn").onclick = ()=>{ const p = $("aiPanel"); p.style.display = p.style.display === "none" ? "" : "none"; };
+$("aiSave").onclick = ()=>{
+  apiKey = $("apiKey").value.trim();
+  liveMode = !!apiKey;
+  $("modeChip").textContent = apiKey ? "LIVE AI ⚡" : "DEMO MODE";
+  $("modeChip").className = "statuschip " + (apiKey ? "chip-live" : "chip-demo");
+};
+$("aiClear").onclick = ()=>{
+  apiKey = ""; $("apiKey").value = "";
+  $("modeChip").textContent = "DEMO MODE"; $("modeChip").className = "statuschip chip-demo";
+};
+
+$("fileInp").onchange = e=>{ if(e.target.files[0]) handleFile(e.target.files[0]); };
+
+applyI18n();
+</script>
+</body>
+</html>
