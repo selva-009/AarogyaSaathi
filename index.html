@@ -669,7 +669,7 @@ function speak(text, onDone){
   let done = 0;
   isSpeaking = true;
   $("nishaBtn").classList.add("speaking");
-  if(voiceMode && rec) try{ rec.abort(); }catch(e){}
+  if(voiceMode) stopMic();
   chunks.forEach(c=>{
     const u = new SpeechSynthesisUtterance(c);
     u.lang = LANGS[lang].code;
@@ -702,24 +702,39 @@ function makeRec(){
   if(!SR) return null;
   const r = new SR();
   r.lang = LANGS[lang].code;
+  r.continuous = true;   // ONE ongoing session — no click/beep sound on every pause
   r.interimResults = false;
   r.maxAlternatives = 1;
   return r;
 }
 
+let recActive = false, recFails = 0;
+function stopMic(){ recActive = false; try{ if(rec) rec.abort(); }catch(e){} }
+
 function startListening(){
-  if(!SR || !voiceMode) return;
-  try{ if(rec) rec.abort(); }catch(e){}
+  if(!SR || !voiceMode || recActive) return;   // never start twice — restarts are what click
   rec = makeRec();
   if(!rec) return;
+  recActive = true;
   rec.onresult = e=>{
-    const t = e.results[0][0].transcript;
+    recFails = 0;
+    const i = (e.resultIndex !== undefined && e.resultIndex < e.results.length) ? e.resultIndex : e.results.length - 1;
+    const t = e.results[i][0].transcript;
     showBubble("🗣️ " + t);
     handleCommand(t.toLowerCase());
   };
-  rec.onerror = ()=>{ /* keep silent, restart below */ };
-  rec.onend = ()=>{ if(voiceMode && !isSpeaking) setTimeout(startListening, 300); };
-  try{ rec.start(); }catch(e){}
+  rec.onerror = e=>{
+    if(e && (e.error === "not-allowed" || e.error === "service-not-allowed")){ voiceMode = false; recActive = false; updateTalkUI(); showBubble("🎤 Allow microphone access to talk"); }
+  };
+  rec.onend = ()=>{
+    recActive = false;
+    if(voiceMode && !isSpeaking){
+      recFails++;
+      const wait = Math.min(1200 * recFails, 6000);   // back off — never hammer the mic
+      setTimeout(()=>{ if(voiceMode && !isSpeaking && !recActive) startListening(); }, wait);
+    }
+  };
+  try{ rec.start(); }catch(e){ recActive = false; }
 }
 
 function listenOnce(cb){
@@ -727,7 +742,7 @@ function listenOnce(cb){
   const r = makeRec();
   if(!r){ cb(prompt("Speech recognition not supported. Type your answer:")); return; }
   showBubble("🎧 …");
-  r.onresult = e=>{ cb(e.results[0][0].transcript); };
+  r.onresult = e=>{ try{ r.stop(); }catch(x){} cb(e.results[0][0].transcript); };
   r.onerror = ()=>{ cb(""); };
   try{ r.start(); }catch(e){ cb(""); }
 }
@@ -939,7 +954,7 @@ $("langSel").onchange = e=>{
   lang = e.target.value;
   applyI18n();
   if(currentData && !liveMode){ currentData = DEMO[lang]; renderChecklist(); }
-  if(voiceMode){ try{ if(rec) rec.abort(); }catch(x){} startListening(); }
+  if(voiceMode){ stopMic(); startListening(); }
 };
 
 $("sampleBtn").onclick = ()=>{ $("summaryText").value = SAMPLE_SUMMARY; $("fileHint").textContent = "Sample summary loaded — press Generate!"; };
@@ -960,7 +975,7 @@ function toggleVoice(){
     startListening();
   } else {
     stopSpeaking();
-    try{ if(rec) rec.abort(); }catch(e){}
+    stopMic();
     showBubble("👋");
   }
 }
