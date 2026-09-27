@@ -644,23 +644,26 @@ function loadVoices(){ voices = window.speechSynthesis ? speechSynthesis.getVoic
 if(window.speechSynthesis){ loadVoices(); speechSynthesis.onvoiceschanged = loadVoices; }
 
 function pickVoice(){
-  const code = LANGS[lang].code;
-  let v = voices.find(x => x.lang && x.lang.toLowerCase().replace("_","-").startsWith(code.toLowerCase()) && /google/i.test(x.name));
-  if(!v) v = voices.find(x => x.lang && x.lang.toLowerCase().replace("_","-").startsWith(code.toLowerCase()));
+  const code = LANGS[lang].code.toLowerCase();
+  const match = x => x.lang && x.lang.toLowerCase().replace("_","-").startsWith(code);
+  // prefer LOCAL system voices: Google network voices click/pop at every chunk boundary
+  let v = voices.find(x => match(x) && x.localService);
+  if(!v) v = voices.find(x => match(x) && /google/i.test(x.name));
+  if(!v) v = voices.find(match);
   return v || null;
 }
 
 function chunkText(t){
   const parts = String(t).split(/(?<=[।.!?])\s+/).filter(Boolean);
   const out = []; let cur = "";
-  for(const p of parts){ if((cur+" "+p).length > 180){ if(cur) out.push(cur.trim()); cur = p; } else cur += " "+p; }
+  for(const p of parts){ if((cur+" "+p).length > 320){ if(cur) out.push(cur.trim()); cur = p; } else cur += " "+p; }
   if(cur.trim()) out.push(cur.trim());
   return out.length ? out : [String(t)];
 }
 
 function speak(text, onDone){
   if(!window.speechSynthesis){ if(onDone) onDone(); return; }
-  speechSynthesis.cancel();
+  if(speechSynthesis.speaking || speechSynthesis.pending) speechSynthesis.cancel();
   const chunks = chunkText(text);
   const v = pickVoice();
   let done = 0;
